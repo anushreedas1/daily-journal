@@ -1,0 +1,380 @@
+:root {
+  --primary: #4f46e5;
+  --bg: #f8f9fc;
+  --card-bg: #ffffff;
+  --border: #e2e4ea;
+  --text: #1f2430;
+  --text-muted: #6b7280;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom-themes extension point: add more [data-theme="..."] blocks here,
+   plus an option in ThemeContext's toggle/selection, to add new themes. */
+[data-theme='dark'] {
+  --primary: #818cf8;
+  --bg: #14161f;
+  --card-bg: #1d2030;
+  --border: #2c3044;
+  --text: #e7e9f5;
+  --text-muted: #9aa0b8;
+}
+
+body {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.auth-page {
+  max-width: 360px;
+  margin: 80px auto;
+  background: var(--card-bg);
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.auth-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-page input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.auth-page button,
+.journal-page button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.auth-page .error {
+  color: #d63031;
+  font-size: 13px;
+}
+
+.journal-page header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-right a {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.header-right button[title] {
+  background: none;
+  padding: 4px 8px;
+  font-size: 16px;
+}
+
+.streak-badge {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tag-input {
+  margin-bottom: 16px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tag-chip {
+  background: #eef0ff;
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+[data-theme='dark'] .tag-chip {
+  background: #2a2d55;
+}
+
+.tag-chip button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.tag-input input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.search-panel {
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.search-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-panel input,
+.search-panel select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.search-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.search-results li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.search-results li:hover {
+  background: var(--bg);
+}
+
+.search-results .result-date {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.search-results .no-results {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.insights-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.insights-page header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.insights-page a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.insights-summary {
+  color: var(--text-muted);
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+@media (max-width: 800px) {
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insights-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.insights-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: -8px;
+}
+
+.journal-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+@media (max-width: 800px) {
+  .journal-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+aside,
+main {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.export-month-button {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.entry-title {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.mood-picker {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mood-option {
+  background: none;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.mood-option.selected {
+  border-color: var(--primary);
+  background: #eef0ff;
+}
+
+.rich-text-editor {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #f2f3f7;
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-toolbar button {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.editor-toolbar button.active {
+  background: var(--primary);
+  color: white;
+}
+
+.editor-content {
+  padding: 16px;
+  min-height: 260px;
+}
+
+.editor-content .ProseMirror {
+  outline: none;
+  min-height: 240px;
+}
+
+.entry-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.tile-indicator {
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.tile-mood {
+  font-size: 12px;
+}
+
+.tile-dot {
+  color: var(--primary);
+  font-size: 18px;
+  line-height: 8px;
+}
