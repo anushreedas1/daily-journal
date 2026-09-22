@@ -4,7 +4,7 @@ async function connectDB() {
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/journal-app';
     await mongoose.connect(uri);
-    console.log('MongoDB connected:', uri);
+    console.log('MongoDB connected successfully');
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
