@@ -6,9 +6,9 @@ Daily Journal allows users to create rich-text journal entries, track moods and 
 
 ## 🚀 Live Demo
 
-**[Open Daily Journal](https://daily-journal-gules.vercel.app/)**
+🔗 **Live Demo:** [Daily Journal](https://daily-journal-gules.vercel.app/)
 
-**Backend API:** https://daily-journal-backend-edag.onrender.com
+🔗 **Backend API:** [Daily Journal Backend](https://daily-journal-backend-edag.onrender.com)
 
 ---
 
