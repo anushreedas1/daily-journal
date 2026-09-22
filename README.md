@@ -4,16 +4,13 @@ A full-stack journaling application for writing, organizing, and reflecting on d
 
 Daily Journal allows users to create rich-text journal entries, track moods and tags, upload multiple photos with captions, browse entries through a calendar, search and filter their journal, track journaling streaks, view mood and sentiment analytics, and export entries as PDFs.
 
-The application supports authentication and cloud synchronization, allowing journal entries and photos to be accessed across devices.
+## 🚀 Live Demo
+
+**[Open Daily Journal]https://daily-journal-gules.vercel.app**
+
+**Backend API:** https://daily-journal-backend-edag.onrender.com
 
 ---
-
-## Live Demo
-
-- Frontend: Deployed on Vercel
-- Backend API: https://daily-journal-backend-edag.onrender.com
-
-> The frontend is connected to the production backend through the `VITE_API_URL` environment variable.
 
 ---
 
