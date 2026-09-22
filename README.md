@@ -1,99 +1,470 @@
-# Daily Journal — with Calendar Integration
+# Daily Journal
 
-A journaling app: write daily entries with rich text, track your mood, browse
-past entries on a calendar, search/filter by tag or mood, keep a journaling
-streak, and export entries to PDF. Includes basic mood analytics and
-sentiment analysis, and a light/dark theme. Works as a normal web app and
-installs as a desktop app (PWA), backed by a shared account so your entries
-sync across devices.
+A full-stack journaling application for writing, organizing, and reflecting on daily experiences.
 
-## Stack
+Daily Journal allows users to create rich-text journal entries, track moods and tags, upload multiple photos with captions, browse entries through a calendar, search and filter their journal, track journaling streaks, view mood and sentiment analytics, and export entries as PDFs.
 
-- **Frontend:** React (Vite), `react-calendar`, TipTap (rich text), `jspdf`,
-  `recharts` (analytics charts)
-- **Backend:** Node.js, Express, MongoDB (Mongoose), JWT auth, `sentiment`
-  (lightweight text sentiment scoring)
-- **PWA:** installable as a desktop app via `vite-plugin-pwa`
+The application supports authentication and cloud synchronization, allowing journal entries and photos to be accessed across devices.
 
-## Project structure
+---
 
-```
+## Live Demo
+
+- Frontend: Deployed on Vercel
+- Backend API: https://daily-journal-backend-edag.onrender.com
+
+> The frontend is connected to the production backend through the `VITE_API_URL` environment variable.
+
+---
+
+## Features
+
+### Journal Entries
+
+- Create one journal entry per day
+- Rich-text editing
+- Add a title and journal content
+- Edit and delete existing entries
+- Automatic sentiment analysis
+- Mood tracking
+- Custom tags
+
+### Photo Management
+
+- Upload multiple photos to a journal entry
+- Store images securely using Cloudinary
+- Add captions to individual photos
+- Delete individual photos
+- Display photos as a gallery inside journal entries
+
+### Calendar
+
+- Browse journal entries by date
+- Quickly identify days with journal entries
+- Navigate between months
+- Open an entry directly from the calendar
+
+### Search and Filtering
+
+Search and filter journal entries using:
+
+- Text
+- Tags
+- Mood
+- Date range
+
+### Mood and Sentiment Analytics
+
+The application provides basic analytics including:
+
+- Mood distribution
+- Sentiment trends
+- Journaling activity
+- Current journaling streak
+- Longest journaling streak
+
+### Authentication
+
+- User registration
+- User login
+- JWT-based authentication
+- Protected journal routes
+- Persistent authentication using browser storage
+
+### PDF Export
+
+Journal entries can be exported as PDF documents.
+
+### Themes
+
+- Light theme
+- Dark theme
+- Theme preference managed through React context
+
+### Progressive Web App
+
+The frontend is configured as a PWA and can be installed as an application on supported devices.
+
+---
+
+## Tech Stack
+
+### Frontend
+
+- React
+- Vite
+- Axios
+- React Calendar
+- TipTap
+- jsPDF
+- Recharts
+- vite-plugin-pwa
+- CSS
+
+### Backend
+
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT
+- Multer
+- Sentiment npm package
+
+### Cloud Services
+
+- MongoDB Atlas — production database
+- Cloudinary — image storage
+- Render — backend deployment
+- Vercel — frontend deployment
+- GitHub — source control
+
+---
+
+## Architecture
+
+```text
+                         ┌──────────────────────┐
+                         │       Vercel         │
+                         │   React + Vite App   │
+                         └──────────┬───────────┘
+                                    │
+                                    │ HTTPS API
+                                    ▼
+                         ┌──────────────────────┐
+                         │       Render         │
+                         │ Node.js + Express    │
+                         │      REST API        │
+                         └───────┬───────┬──────┘
+                                 │       │
+                    ┌────────────┘       └─────────────┐
+                    ▼                                  ▼
+          ┌──────────────────┐               ┌──────────────────┐
+          │  MongoDB Atlas   │               │    Cloudinary    │
+          │                  │               │                  │
+          │ Users            │               │ Journal photos   │
+          │ Entries          │               │ Image metadata   │
+          │ Mood / Tags      │               │                  │
+          └──────────────────┘               └──────────────────┘
+Project Structure
 journal-app/
-  backend/
-    models/       # User, Entry (Mongoose schemas)
-    routes/        # /api/auth, /api/entries (CRUD, search, streak, analytics)
-    middleware/    # JWT auth guard
-    utils/         # sentiment.js — isolated sentiment-analysis hook
-    server.js
-  frontend/
-    src/
-      api/         # axios client
-      context/     # AuthContext, ThemeContext
-      components/  # CalendarView, RichTextEditor, MoodPicker, TagInput,
-                    # StreakBadge, SearchPanel, ExportPdfButton
-      pages/        # LoginPage, RegisterPage, JournalPage, InsightsPage
-```
+│
+├── backend/
+│   ├── config/
+│   │   └── db.js
+│   │
+│   ├── middleware/
+│   │   └── auth.js
+│   │
+│   ├── models/
+│   │   ├── User.js
+│   │   └── Entry.js
+│   │
+│   ├── routes/
+│   │   ├── auth.js
+│   │   └── entries.js
+│   │
+│   ├── utils/
+│   │   └── sentiment.js
+│   │
+│   ├── server.js
+│   ├── package.json
+│   └── .env
+│
+├── frontend/
+│   ├── public/
+│   │
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── client.js
+│   │   │
+│   │   ├── components/
+│   │   │   ├── CalendarView.jsx
+│   │   │   ├── ExportPdfButton.jsx
+│   │   │   ├── MoodPicker.jsx
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── RichTextEditor.jsx
+│   │   │   ├── SearchPanel.jsx
+│   │   │   ├── StreakBadge.jsx
+│   │   │   └── TagInput.jsx
+│   │   │
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx
+│   │   │   └── ThemeContext.jsx
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── InsightsPage.jsx
+│   │   │   ├── JournalPage.jsx
+│   │   │   ├── LoginPage.jsx
+│   │   │   └── RegisterPage.jsx
+│   │   │
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── styles.css
+│   │
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+│
+├── .gitignore
+├── README.md
+└── CONTRIBUTING.md
+Data Model
 
-## Running locally
+Each journal entry belongs to a specific user and date.
 
-**Backend**
-```bash
+There is one entry per user per day.
+
+Entry
+{
+  user,
+  date,
+  title,
+  body,
+  mood,
+  tags,
+  sentimentScore,
+  sentimentLabel,
+  images[]
+}
+Image Data
+
+Each uploaded image contains information such as:
+
+Image
+{
+  url,
+  publicId,
+  caption,
+  width,
+  height,
+  createdAt
+}
+
+Images are stored in Cloudinary while their metadata is stored with the corresponding journal entry in MongoDB.
+
+Sentiment Analysis
+
+Journal text is processed when an entry is saved.
+
+The backend uses the sentiment npm package to calculate a basic sentiment score and label.
+
+Possible labels include:
+
+positive
+neutral
+negative
+
+The sentiment functionality is isolated in:
+
+backend/utils/sentiment.js
+
+This makes it possible to replace the lightweight sentiment implementation with a more advanced ML or AI model in the future without restructuring the journal routes.
+
+API
+
+The backend exposes REST APIs under:
+
+/api
+Authentication
+POST /api/auth/register
+POST /api/auth/login
+Journal Entries
+GET    /api/entries/:date
+PUT    /api/entries/:date
+DELETE /api/entries/:date
+Search
+GET /api/entries/search?q=&tag=&mood=&from=&to=
+Calendar Summary
+GET /api/entries/summary
+Streak
+GET /api/entries/streak
+Analytics
+GET /api/entries/analytics?from=&to=
+Images
+
+Journal entries support multiple image operations, including:
+
+POST   /api/entries/:date/images
+DELETE /api/entries/:date/images/:imageId
+PUT    /api/entries/:date/images/:imageId
+
+The image update endpoint is used for operations such as updating an image caption.
+
+Environment Variables
+Backend
+
+Create:
+
+backend/.env
+
+The backend requires:
+
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_jwt_secret
+
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+Never commit .env files or secrets to GitHub.
+
+Frontend
+
+The frontend uses:
+
+VITE_API_URL=https://your-backend-url/api
+
+For local development:
+
+VITE_API_URL=http://localhost:5000/api
+
+The API client automatically uses the environment variable:
+
+import.meta.env.VITE_API_URL
+
+and falls back to the local backend URL when the variable is not provided.
+
+Running Locally
+1. Clone the repository
+git clone https://github.com/anushreedas1/daily-journal.git
+cd daily-journal
+2. Start the Backend
 cd backend
-cp .env.example .env   # fill in MONGODB_URI and JWT_SECRET
 npm install
 npm run dev
-```
 
-**Frontend**
-```bash
+The backend runs locally on:
+
+http://localhost:5000
+3. Start the Frontend
+
+Open another terminal:
+
 cd frontend
 npm install
 npm run dev
-```
 
-The frontend expects the API at `http://localhost:5000/api` by default
-(override with `VITE_API_URL`).
+The Vite development server will provide the local frontend URL.
 
-## Data model
+Production Deployment
 
-Each `Entry` is keyed by `(user, date)` where `date` is `YYYY-MM-DD`, so
-there's exactly one entry per user per day — this is what makes the calendar
-lookups and "one entry per day" behavior simple.
+The project is deployed using separate services for the frontend and backend.
 
-```
-Entry {
-  user, date, title, body (HTML from the rich text editor),
-  mood: 'great' | 'good' | 'okay' | 'bad' | 'terrible' | null,
-  tags: string[],
-  sentimentScore: number | null,   // auto-computed, see utils/sentiment.js
-  sentimentLabel: 'positive' | 'neutral' | 'negative' | null
-}
-```
+Frontend
+Vercel
 
-## API additions
+The frontend is built from:
 
-- `GET /api/entries/search?q=&tag=&mood=&from=&to=` — full-text search plus filters
-- `GET /api/entries/streak` — current and longest journaling streak
-- `GET /api/entries/analytics?from=&to=` — mood distribution + sentiment trend
+frontend/
 
-## Extension points (good first contributions)
+Production API URL:
 
-- **Mood analytics** ✅ implemented — `InsightsPage.jsx` charts mood
-  distribution and sentiment trend via `/api/entries/analytics`. Good next
-  step: add week-over-week comparisons or per-tag breakdowns.
-- **Sentiment analysis** ✅ implemented (basic) — `backend/utils/sentiment.js`
-  scores entry text with the `sentiment` npm package on save. It's
-  intentionally isolated so a contributor can swap in a smarter model (e.g.
-  an ML-based API) without touching route logic.
-- **Custom themes** ✅ implemented (light/dark) — `ThemeContext.jsx` toggles
-  a `data-theme` attribute; themes are defined as CSS variable blocks in
-  `src/styles.css`. Adding a new theme = one more `[data-theme="..."]` block
-  plus an option in the toggle.
-- **External calendar sync** — not yet implemented. The calendar UI
-  (`CalendarView.jsx`) currently only reads from `/api/entries/summary`; a
-  Google Calendar integration could merge in real events as a second data
-  source.
-- **Push reminders** — not yet implemented. The app is already a PWA, so a
-  service-worker notification ("write today's entry") is a natural addition.
+VITE_API_URL=https://your-render-backend-url/api
+Backend
+Render
 
-See `CONTRIBUTING.md` for how to submit changes.
+The backend is built from:
+
+backend/
+
+Production services include:
+
+MongoDB Atlas
+Cloudinary
+
+Environment variables are configured directly in the deployment platforms and are not stored in the repository.
+
+Git Workflow
+
+The project uses Git for version control.
+
+Typical workflow:
+
+git status
+git add .
+git commit -m "Describe your changes"
+git push
+
+The production deployments are connected to the GitHub repository so changes can be deployed after being pushed to the appropriate branch.
+
+Security
+
+The application uses several measures to protect user data and credentials:
+
+JWT authentication
+Protected backend routes
+Environment variables for secrets
+.gitignore protection for .env
+Cloudinary for image storage
+MongoDB Atlas for managed database hosting
+Separate production database credentials
+Secrets are not exposed to the React frontend
+
+Sensitive credentials such as:
+
+MONGODB_URI
+JWT_SECRET
+CLOUDINARY_API_SECRET
+
+must never be committed to GitHub.
+
+Current Features
+ User registration
+ User login
+ JWT authentication
+ Rich-text journal editor
+ Daily journal entries
+ Calendar navigation
+ Mood tracking
+ Tags
+ Search and filtering
+ Journaling streaks
+ Sentiment analysis
+ Mood analytics
+ Light/dark theme
+ PDF export
+ Multiple photos per journal entry
+ Image captions
+ Cloudinary image storage
+ PWA support
+ Production deployment
+ MongoDB Atlas integration
+Future Improvements
+
+Possible future improvements include:
+
+Daily memory reminders such as "On this day last year..."
+Dedicated photo gallery page
+Automatic image compression and resizing
+Drag-and-drop image uploads
+More advanced AI-based sentiment analysis
+AI-powered journal summaries
+Weekly and monthly journal summaries
+More detailed analytics
+Google Calendar integration
+Push notifications and journaling reminders
+Additional themes
+Improved PDF layouts with journal photos
+Contributing
+
+Contributions and suggestions are welcome.
+
+See:
+
+CONTRIBUTING.md
+
+for contribution guidelines.
+
+License
+
+This project is intended as a personal/portfolio project.
+
+
+### One small thing before you paste it
+
+Your old README says:
+
+```bash
+cp .env.example .env
+
