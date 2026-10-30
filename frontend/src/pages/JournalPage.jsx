@@ -20,6 +20,24 @@ function todayKey() {
   )}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function QueuedPhotoPreview({ file, onRemove }) {
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  return (
+    <div className="queued-photo">
+      {previewUrl && <img src={previewUrl} alt={`Preview of ${file.name}`} />}
+      <button type="button" className="queued-photo-remove" onClick={onRemove} aria-label={`Remove ${file.name}`}>×</button>
+      <span title={file.name}>{file.name}</span>
+    </div>
+  );
+}
+
 export default function JournalPage() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -186,7 +204,7 @@ export default function JournalPage() {
 
     setImageError('');
 
-    const remainingSlots = 8 - images.length;
+    const remainingSlots = 8 - images.length - imageFiles.length;
 
     if (files.length > remainingSlots) {
       setImageError(
@@ -225,7 +243,12 @@ export default function JournalPage() {
       return;
     }
 
-    setImageFiles(files);
+    setImageFiles((current) => [...current, ...files]);
+    e.target.value = '';
+  }
+
+  function removeQueuedImage(index) {
+    setImageFiles((current) => current.filter((_, i) => i !== index));
   }
 
   // --------------------------------------------------
@@ -525,8 +548,15 @@ export default function JournalPage() {
           {/* Multiple image attachment */}
           {/* ------------------------------------------ */}
 
-          <div className="image-attachment">
-            <h3>Photos</h3>
+          <section className="image-attachment" aria-labelledby="photos-heading">
+            <div className="photo-section-heading">
+              <div>
+                <span className="photo-eyebrow">MEMORIES</span>
+                <h3 id="photos-heading">Photos</h3>
+                <p>Keep a little piece of this day close.</p>
+              </div>
+              <span className="photo-count">{images.length}/8</span>
+            </div>
 
             {/* Existing image gallery */}
             {images.length > 0 ? (
@@ -684,62 +714,36 @@ export default function JournalPage() {
                 ))}
               </div>
             ) : (
-              <p className="image-empty">
-                No photos attached to this entry.
-              </p>
+              <div className="image-empty">
+                <span className="photo-empty-icon" aria-hidden="true">✧</span>
+                <strong>No photos for this day yet</strong>
+                <span>Add a favorite moment to your entry.</span>
+              </div>
             )}
 
             {/* Upload area */}
             {remainingImageSlots > 0 && (
               <>
-                <label
-                  htmlFor="journal-images"
-                  className="image-upload-label"
-                >
-                  📷 Choose{' '}
-                  {remainingImageSlots === 1
-                    ? 'a photo'
-                    : 'photos'}
+                <input id="journal-images" type="file" accept="image/*" multiple className="image-file-input" onChange={handleImageSelect} />
+                <label htmlFor="journal-images" className="image-upload-label">
+                  <span className="upload-icon" aria-hidden="true">＋</span>
+                  <strong>Add photos to this entry</strong>
+                  <span>Choose up to {remainingImageSlots} {remainingImageSlots === 1 ? 'photo' : 'photos'} from your device</span>
+                  <span className="upload-browse">Browse photos</span>
                 </label>
-
-                <input
-                  id="journal-images"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="image-file-input"
-                  onChange={handleImageSelect}
-                />
-
                 {imageFiles.length > 0 && (
                   <div className="selected-image">
-                    <div>
-                      <strong>
-                        {imageFiles.length}{' '}
-                        {imageFiles.length === 1
-                          ? 'photo'
-                          : 'photos'}{' '}
-                        selected
-                      </strong>
-
-                      <ul
-                        style={{
-                          margin: '8px 0 0',
-                          paddingLeft: '20px'
-                        }}
-                      >
-                        {imageFiles.map(
-                          (file) => (
-                            <li
-                              key={`${file.name}-${file.lastModified}`}
-                            >
-                              {file.name}
-                            </li>
-                          )
-                        )}
-                      </ul>
+                    <div className="queued-photo-grid">
+                      {imageFiles.map((file, index) => (
+                        <QueuedPhotoPreview
+                          file={file}
+                          key={`${file.name}-${file.lastModified}-${index}`}
+                          onRemove={() => removeQueuedImage(index)}
+                        />
+                      ))}
                     </div>
-
+                    <div className="queued-photo-actions">
+                      <strong>{imageFiles.length} {imageFiles.length === 1 ? 'photo' : 'photos'} ready</strong>
                     <button
                       type="button"
                       onClick={
@@ -765,6 +769,7 @@ export default function JournalPage() {
                               : 'photos'
                           }`}
                     </button>
+                    </div>
                   </div>
                 )}
               </>
@@ -788,7 +793,7 @@ export default function JournalPage() {
                 {imageError}
               </p>
             )}
-          </div>
+          </section>
 
           {/* ------------------------------------------ */}
           {/* Journal editor */}

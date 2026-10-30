@@ -68,7 +68,11 @@ const entrySchema = new mongoose.Schema(
 
     mood: {
       type: String,
-      enum: ['great', 'good', 'okay', 'bad', 'terrible', null],
+      enum: [
+        'great', 'good', 'okay', 'bad', 'terrible', 'excited',
+        'grateful', 'calm', 'anxious', 'tired', 'overwhelmed',
+        'angry', 'hopeful', null
+      ],
       default: null
     },
 

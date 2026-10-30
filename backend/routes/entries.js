@@ -163,6 +163,7 @@ router.get('/search', async (req, res) => {
     }
 
     const entries = await Entry.find(filter)
+      .select('date title mood')
       .sort({ date: -1 })
       .limit(200);
 
@@ -280,7 +281,15 @@ router.get('/analytics', async (req, res) => {
       good: 0,
       okay: 0,
       bad: 0,
-      terrible: 0
+      terrible: 0,
+      excited: 0,
+      grateful: 0,
+      calm: 0,
+      anxious: 0,
+      tired: 0,
+      overwhelmed: 0,
+      angry: 0,
+      hopeful: 0
     };
 
     entries.forEach((e) => {
@@ -750,6 +759,14 @@ router.put(
         'okay',
         'bad',
         'terrible',
+        'excited',
+        'grateful',
+        'calm',
+        'anxious',
+        'tired',
+        'overwhelmed',
+        'angry',
+        'hopeful',
         null
       ]),
 

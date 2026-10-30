@@ -20,7 +20,15 @@ const MOOD_COLORS = {
   good: '#84cc16',
   okay: '#eab308',
   bad: '#f97316',
-  terrible: '#ef4444'
+  terrible: '#ef4444',
+  excited: '#06b6d4',
+  grateful: '#ec4899',
+  calm: '#14b8a6',
+  anxious: '#8b5cf6',
+  tired: '#64748b',
+  overwhelmed: '#a855f7',
+  angry: '#dc2626',
+  hopeful: '#10b981'
 };
 
 export default function InsightsPage() {

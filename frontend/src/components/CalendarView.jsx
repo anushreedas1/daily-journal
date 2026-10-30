@@ -1,5 +1,4 @@
 import Calendar from 'react-calendar';
-import { moodEmoji } from './MoodPicker';
 import 'react-calendar/dist/Calendar.css';
 
 function toDateKey(date) {
@@ -17,21 +16,11 @@ export default function CalendarView({ entriesByDate, onSelectDate, onActiveMont
       onActiveStartDateChange={({ activeStartDate }) =>
         onActiveMonthChange(activeStartDate.getFullYear(), activeStartDate.getMonth() + 1)
       }
-      tileContent={({ date, view }) => {
-        if (view !== 'month') return null;
-        const key = toDateKey(date);
-        const entry = entriesByDate[key];
-        if (!entry) return null;
-        return (
-          <div className="tile-indicator">
-            {entry.mood ? (
-              <span className="tile-mood">{moodEmoji(entry.mood)}</span>
-            ) : (
-              <span className="tile-dot">•</span>
-            )}
-          </div>
-        );
-      }}
+      tileClassName={({ date, view }) =>
+        view === 'month' && entriesByDate[toDateKey(date)]
+          ? 'react-calendar__tile--has-entry'
+          : null
+      }
     />
   );
 }
