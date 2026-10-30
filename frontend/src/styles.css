@@ -464,3 +464,268 @@ main {
   .image-attachment { padding: 14px; }
   .queued-photo-actions { align-items: stretch; flex-direction: column; }
 }
+
+/* Touch-friendly layouts for phones and narrow tablets. */
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.image-gallery,
+.queued-photo-grid,
+.insights-grid,
+.journal-layout {
+  min-width: 0;
+}
+
+.search-filters > *,
+.search-panel input,
+.search-panel select {
+  min-width: 0;
+}
+
+.search-results .result-date {
+  flex: 0 0 auto;
+  font-size: 11px;
+}
+
+.search-results .result-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-toolbar {
+  flex-wrap: wrap;
+}
+
+.auth-page {
+  width: min(360px, calc(100% - 32px));
+  margin: clamp(20px, 10vh, 80px) auto;
+}
+
+.auth-page input {
+  width: 100%;
+  min-height: 44px;
+  font-size: 16px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.auth-page button,
+.entry-actions button,
+.queued-photo-actions button,
+.image-gallery-item button {
+  min-height: 44px;
+}
+
+@media (max-width: 800px) {
+  .journal-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .insights-page {
+    padding: 18px;
+  }
+
+  .insights-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .journal-page > header {
+    display: block;
+    padding: 14px 16px;
+  }
+
+  .journal-page > header h1 {
+    margin: 0 0 12px;
+    font-size: 24px;
+  }
+
+  .header-right {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px 12px;
+  }
+
+  .journal-layout {
+    gap: 14px;
+    padding: 14px;
+  }
+
+  aside,
+  main {
+    min-width: 0;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .journal-layout main h2 {
+    margin-top: 0;
+    font-size: 20px;
+  }
+
+  .react-calendar__navigation button {
+    min-width: 40px;
+    min-height: 44px;
+  }
+
+  .react-calendar__tile {
+    min-height: 44px;
+    padding: 7px 2px;
+    font-size: 13px;
+  }
+
+  .react-calendar__tile--has-entry abbr::after {
+    font-size: 1.8rem;
+  }
+
+  .search-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .search-filters input,
+  .search-filters select {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .search-results {
+    max-height: 280px;
+  }
+
+  .entry-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .entry-actions button {
+    width: 100%;
+  }
+
+  .entry-title,
+  .tag-input input {
+    font-size: 16px;
+  }
+
+  .editor-toolbar button {
+    min-width: 44px;
+    min-height: 40px;
+  }
+
+  .editor-content {
+    padding: 12px;
+    min-height: 220px;
+  }
+
+  .editor-content .ProseMirror {
+    min-height: 196px;
+    overflow-wrap: anywhere;
+  }
+
+  .image-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)) !important;
+  }
+
+  .image-gallery-item textarea {
+    font-size: 16px !important;
+  }
+
+  .photo-section-heading h3 {
+    font-size: 18px;
+  }
+
+  .insights-page {
+    padding: 14px;
+  }
+
+  .insights-page header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .insights-page header h1 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .insights-card {
+    min-width: 0;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .journal-layout {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  aside,
+  main {
+    padding: 11px;
+  }
+
+  .journal-page > header {
+    padding: 12px;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .streak-badge {
+    white-space: normal;
+  }
+
+  .react-calendar__tile {
+    min-height: 40px;
+    font-size: 12px;
+  }
+
+  .react-calendar__tile--has-entry abbr::after {
+    font-size: 1.6rem;
+  }
+
+  .search-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mood-picker {
+    gap: 6px;
+  }
+
+  .mood-option {
+    width: 40px;
+    height: 40px;
+  }
+}

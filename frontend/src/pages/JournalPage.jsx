@@ -544,6 +544,11 @@ export default function JournalPage() {
             onChange={setTags}
           />
 
+          <RichTextEditor
+            content={body}
+            onChange={setBody}
+          />
+
           {/* ------------------------------------------ */}
           {/* Multiple image attachment */}
           {/* ------------------------------------------ */}
@@ -794,15 +799,6 @@ export default function JournalPage() {
               </p>
             )}
           </section>
-
-          {/* ------------------------------------------ */}
-          {/* Journal editor */}
-          {/* ------------------------------------------ */}
-
-          <RichTextEditor
-            content={body}
-            onChange={setBody}
-          />
 
           <div className="entry-actions">
             <button
