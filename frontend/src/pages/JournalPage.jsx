@@ -10,6 +10,7 @@ import TagInput from '../components/TagInput';
 import StreakBadge from '../components/StreakBadge';
 import SearchPanel from '../components/SearchPanel';
 import { exportEntriesToPdf } from '../components/ExportPdfButton';
+import OnThisDay from '../components/OnThisDay';
 
 function todayKey() {
   const d = new Date();
@@ -496,6 +497,8 @@ export default function JournalPage() {
           <button onClick={logout}>Log out</button>
         </div>
       </header>
+
+      <OnThisDay date={selectedDate} onOpenEntry={setSelectedDate} />
 
       <div className="journal-layout">
         <aside>

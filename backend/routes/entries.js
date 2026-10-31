@@ -125,6 +125,34 @@ router.get('/summary', async (req, res) => {
 });
 
 // --------------------------------------------------
+// GET /api/entries/on-this-day?date=YYYY-MM-DD
+// Return earlier entries from the same month and day.
+// --------------------------------------------------
+
+router.get('/on-this-day', async (req, res) => {
+  const { date } = req.query;
+
+  if (!date || !DATE_RE.test(date)) {
+    return res.status(400).json({ message: 'A date in YYYY-MM-DD format is required' });
+  }
+
+  try {
+    const monthDay = date.slice(5);
+    const year = Number(date.slice(0, 4));
+    const entries = await Entry.find({
+      user: req.userId,
+      date: { $regex: `^\\d{4}-${monthDay}$` }
+    })
+      .select('date title body mood tags images -_id')
+      .sort({ date: -1 });
+
+    res.json({ entries: entries.filter((entry) => Number(entry.date.slice(0, 4)) < year) });
+  } catch (err) {
+    res.status(500).json({ message: 'Could not load memories', error: err.message });
+  }
+});
+
+// --------------------------------------------------
 // GET /api/entries/search
 // --------------------------------------------------
 
@@ -272,7 +300,7 @@ router.get('/analytics', async (req, res) => {
 
     const entries = await Entry.find(filter)
       .select(
-        'date mood sentimentScore sentimentLabel -_id'
+        'date mood sentimentScore sentimentLabel tags -_id'
       )
       .sort({ date: 1 });
 
@@ -309,7 +337,13 @@ router.get('/analytics', async (req, res) => {
     res.json({
       moodCounts,
       sentimentTrend,
-      totalEntries: entries.length
+      totalEntries: entries.length,
+      entries: entries.map((entry) => ({
+        date: entry.date,
+        mood: entry.mood,
+        sentimentScore: entry.sentimentScore,
+        tags: entry.tags || []
+      }))
     });
   } catch (err) {
     res.status(500).json({
