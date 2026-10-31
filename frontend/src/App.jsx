@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JournalPage from './pages/JournalPage';
 import InsightsPage from './pages/InsightsPage';
+import PhotoGalleryPage from './pages/PhotoGalleryPage';
 import './styles.css';
 
 export default function App() {
@@ -29,6 +30,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <InsightsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/photos"
+              element={
+                <ProtectedRoute>
+                  <PhotoGalleryPage />
                 </ProtectedRoute>
               }
             />

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -11,6 +11,7 @@ import StreakBadge from '../components/StreakBadge';
 import SearchPanel from '../components/SearchPanel';
 import { exportEntriesToPdf } from '../components/ExportPdfButton';
 import OnThisDay from '../components/OnThisDay';
+import GoalsPanel from '../components/GoalsPanel';
 
 function todayKey() {
   const d = new Date();
@@ -42,15 +43,33 @@ function QueuedPhotoPreview({ file, onRemove }) {
 export default function JournalPage() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [searchParams] = useSearchParams();
 
   const now = new Date();
+  const linkedDate = searchParams.get('date');
+  const initialDate = /^\d{4}-\d{2}-\d{2}$/.test(linkedDate || '') ? new Date(`${linkedDate}T12:00:00`) : now;
 
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(initialDate.getFullYear());
+  const [month, setMonth] = useState(initialDate.getMonth() + 1);
 
   const [entriesByDate, setEntriesByDate] = useState({});
 
-  const [selectedDate, setSelectedDate] = useState(todayKey());
+  const [selectedDate, setSelectedDate] = useState(() => /^\d{4}-\d{2}-\d{2}$/.test(linkedDate || '') ? linkedDate : todayKey());
+  const [journalPanel, setJournalPanel] = useState(null);
+  const journalPanelRef = useRef(null);
+
+  useEffect(() => {
+    if (journalPanel) journalPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [journalPanel]);
+
+  useEffect(() => {
+    const date = searchParams.get('date');
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    setSelectedDate(date);
+    const parsed = new Date(`${date}T12:00:00`);
+    setYear(parsed.getFullYear());
+    setMonth(parsed.getMonth() + 1);
+  }, [searchParams]);
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -173,6 +192,8 @@ export default function JournalPage() {
         tags
       });
 
+      window.dispatchEvent(new Event('journal-entry-changed'));
+
       setStatus('saved');
 
       await loadSummary(year, month);
@@ -284,6 +305,7 @@ export default function JournalPage() {
       setImages(res.data.entry.images || []);
       setImageFiles([]);
       setImageStatus('uploaded');
+      window.dispatchEvent(new Event('journal-entry-changed'));
 
       await loadSummary(year, month);
 
@@ -335,6 +357,7 @@ export default function JournalPage() {
       );
 
       setImages(res.data.entry.images || []);
+      window.dispatchEvent(new Event('journal-entry-changed'));
 
       setImageStatus('idle');
 
@@ -478,12 +501,23 @@ export default function JournalPage() {
   return (
     <div className="journal-page">
       <header>
-        <h1>Daily Journal</h1>
+        <div className="journal-brand">
+          <h1>Daily Journal</h1>
+          <details className="journal-tools-menu">
+            <summary aria-label="Open journal tools menu">✨ Explore</summary>
+            <div className="journal-tools-dropdown">
+              <button type="button" aria-pressed={journalPanel === 'memories'} onClick={(event) => { setJournalPanel((current) => current === 'memories' ? null : 'memories'); event.currentTarget.closest('details').open = false; }}>On This Day</button>
+              <button type="button" aria-pressed={journalPanel === 'goals'} onClick={(event) => { setJournalPanel((current) => current === 'goals' ? null : 'goals'); event.currentTarget.closest('details').open = false; }}>Goals &amp; reflections</button>
+            </div>
+          </details>
+        </div>
 
         <div className="header-right">
           <StreakBadge />
 
           <Link to="/insights">Insights</Link>
+
+          <Link to="/photos">Photo memories</Link>
 
           <button
             onClick={toggleTheme}
@@ -498,12 +532,13 @@ export default function JournalPage() {
         </div>
       </header>
 
-      <OnThisDay date={selectedDate} onOpenEntry={setSelectedDate} />
-
-      <div className="journal-layout">
+      {!journalPanel ? <div className="journal-layout">
         <aside>
           <CalendarView
             entriesByDate={entriesByDate}
+            selectedDate={selectedDate}
+            year={year}
+            month={month}
             onSelectDate={setSelectedDate}
             onActiveMonthChange={(y, m) => {
               setYear(y);
@@ -820,7 +855,13 @@ export default function JournalPage() {
             </button>
           </div>
         </main>
-      </div>
+      </div> : (
+        <section className="journal-focused-panel" ref={journalPanelRef}>
+          <button type="button" className="focused-panel-back" onClick={() => setJournalPanel(null)}>← Back to journal</button>
+          {journalPanel === 'memories' && <OnThisDay date={todayKey()} onOpenEntry={(entryDate) => { setSelectedDate(entryDate); setJournalPanel(null); }} />}
+          {journalPanel === 'goals' && <GoalsPanel />}
+        </section>
+      )}
     </div>
   );
 }

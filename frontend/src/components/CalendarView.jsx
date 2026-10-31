@@ -9,9 +9,11 @@ function toDateKey(date) {
 }
 
 // entriesByDate: { 'YYYY-MM-DD': { mood, title } }
-export default function CalendarView({ entriesByDate, onSelectDate, onActiveMonthChange }) {
+export default function CalendarView({ entriesByDate, onSelectDate, onActiveMonthChange, selectedDate, year, month }) {
   return (
     <Calendar
+      activeStartDate={new Date(year, month - 1, 1)}
+      value={selectedDate ? new Date(`${selectedDate}T12:00:00`) : null}
       onClickDay={(date) => onSelectDate(toDateKey(date))}
       onActiveStartDateChange={({ activeStartDate }) =>
         onActiveMonthChange(activeStartDate.getFullYear(), activeStartDate.getMonth() + 1)

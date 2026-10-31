@@ -153,6 +153,35 @@ router.get('/on-this-day', async (req, res) => {
 });
 
 // --------------------------------------------------
+// GET /api/entries/photos
+// All photos belonging to the authenticated user's entries.
+// --------------------------------------------------
+
+router.get('/photos', async (req, res) => {
+  try {
+    const entries = await Entry.find({ user: req.userId, 'images.0': { $exists: true } })
+      .select('date title mood tags images -_id')
+      .sort({ date: -1 });
+
+    const photos = entries.flatMap((entry) => entry.images.map((image) => ({
+      id: image._id,
+      url: image.url,
+      caption: image.caption,
+      date: entry.date,
+      title: entry.title,
+      mood: entry.mood,
+      tags: entry.tags || [],
+      width: image.width,
+      height: image.height
+    })));
+
+    res.json({ photos });
+  } catch (err) {
+    res.status(500).json({ message: 'Could not load photo gallery', error: err.message });
+  }
+});
+
+// --------------------------------------------------
 // GET /api/entries/search
 // --------------------------------------------------
 
