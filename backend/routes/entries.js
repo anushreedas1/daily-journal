@@ -220,7 +220,7 @@ router.get('/search', async (req, res) => {
     }
 
     const entries = await Entry.find(filter)
-      .select('date title mood')
+      .select('date title body mood tags')
       .sort({ date: -1 })
       .limit(200);
 

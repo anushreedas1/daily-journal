@@ -84,6 +84,11 @@ export default function JournalPage() {
   const [imageFiles, setImageFiles] = useState([]);
 
   const [status, setStatus] = useState('idle');
+  const [loadedDate, setLoadedDate] = useState(null);
+  const [draftStatus, setDraftStatus] = useState('idle');
+  const lastSavedDraftRef = useRef(null);
+  const hasEntryRef = useRef(false);
+  const autosaveTimerRef = useRef(null);
   const [imageStatus, setImageStatus] = useState('idle');
   const [imageError, setImageError] = useState('');
 
@@ -130,6 +135,8 @@ export default function JournalPage() {
   useEffect(() => {
     let cancelled = false;
 
+    setLoadedDate(null);
+    setDraftStatus('idle');
     setStatus('loading');
     setImageFiles([]);
     setImageError('');
@@ -148,6 +155,14 @@ export default function JournalPage() {
         setMood(entry.mood || null);
         setTags(entry.tags || []);
         setImages(entry.images || []);
+        hasEntryRef.current = true;
+        lastSavedDraftRef.current = JSON.stringify({
+          title: entry.title || '',
+          body: entry.body || '',
+          mood: entry.mood || null,
+          tags: entry.tags || []
+        });
+        setLoadedDate(selectedDate);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -159,6 +174,9 @@ export default function JournalPage() {
           setTags([]);
           setImages([]);
           setImageFiles([]);
+          hasEntryRef.current = false;
+          lastSavedDraftRef.current = JSON.stringify({ title: '', body: '', mood: null, tags: [] });
+          setLoadedDate(selectedDate);
         } else {
           console.error(
             'Could not load journal entry:',
@@ -177,12 +195,42 @@ export default function JournalPage() {
     };
   }, [selectedDate]);
 
+  // Automatically save changed text and metadata after the user pauses typing.
+  useEffect(() => {
+    const draft = JSON.stringify({ title, body, mood, tags });
+    if (loadedDate !== selectedDate) return undefined;
+    if (draft === lastSavedDraftRef.current) {
+      setDraftStatus('idle');
+      return undefined;
+    }
+    if (!hasEntryRef.current && !title.trim() && !body.replace(/<[^>]*>/g, '').trim() && !mood && tags.length === 0) return undefined;
+
+    setDraftStatus('pending');
+    autosaveTimerRef.current = window.setTimeout(async () => {
+      setDraftStatus('saving');
+      try {
+        await api.put(`/entries/${selectedDate}`, JSON.parse(draft));
+        lastSavedDraftRef.current = draft;
+        hasEntryRef.current = true;
+        setDraftStatus('saved');
+        window.dispatchEvent(new Event('journal-entry-changed'));
+        await loadSummary(year, month);
+      } catch (err) {
+        console.error('Could not autosave journal draft:', err);
+        setDraftStatus('error');
+      }
+    }, 900);
+
+    return () => window.clearTimeout(autosaveTimerRef.current);
+  }, [selectedDate, loadedDate, title, body, mood, tags, year, month, loadSummary]);
+
   // --------------------------------------------------
   // Save journal entry
   // --------------------------------------------------
 
   async function handleSave() {
     try {
+      window.clearTimeout(autosaveTimerRef.current);
       setStatus('saving');
 
       await api.put(`/entries/${selectedDate}`, {
@@ -193,6 +241,9 @@ export default function JournalPage() {
       });
 
       window.dispatchEvent(new Event('journal-entry-changed'));
+      lastSavedDraftRef.current = JSON.stringify({ title, body, mood, tags });
+      hasEntryRef.current = true;
+      setDraftStatus('saved');
 
       setStatus('saved');
 
@@ -204,6 +255,7 @@ export default function JournalPage() {
     } catch (err) {
       console.error('Could not save entry:', err);
 
+      setDraftStatus('error');
       setStatus('idle');
 
       alert(
@@ -837,6 +889,12 @@ export default function JournalPage() {
               </p>
             )}
           </section>
+
+          {draftStatus !== 'idle' && (
+            <p className={`autosave-status ${draftStatus}`} role="status" aria-live="polite">
+              {draftStatus === 'pending' ? 'Draft will save shortly…' : draftStatus === 'saving' ? 'Saving draft…' : draftStatus === 'saved' ? 'Draft saved automatically' : 'Draft could not be saved. Try Save entry.'}
+            </p>
+          )}
 
           <div className="entry-actions">
             <button

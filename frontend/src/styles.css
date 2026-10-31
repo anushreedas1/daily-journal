@@ -232,6 +232,13 @@ body {
   background: var(--bg);
 }
 
+.search-results li { align-items: flex-start; }
+.search-result-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.result-title { color: var(--text); font-weight: 600; }
+.result-snippet { display: -webkit-box; overflow: hidden; color: var(--text-muted); font-size: 12px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.result-snippet mark { border-radius: 2px; background: color-mix(in srgb, #facc15 35%, var(--card-bg)); color: var(--text); }
+.result-tags { color: var(--primary); font-size: 10px; }
+
 .search-results .result-date {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
@@ -452,7 +459,110 @@ body {
   .journal-brand { margin-bottom: 12px; }
   .journal-page > header .journal-brand h1 { margin: 0; font-size: 24px; }
   .journal-focused-panel { min-height: calc(100vh - 120px); padding: 14px; }
+  .journal-page .mood-option { width: 40px; height: 40px; }
 }
+
+/* Keep controls readable and correctly shaped in both themes. */
+.journal-page .mood-option {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--card-bg);
+  color: var(--text);
+}
+.journal-page .mood-option.selected {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 18%, var(--card-bg));
+}
+.journal-page .entry-title,
+.journal-page .tag-input input,
+.journal-page .search-panel input,
+.journal-page .search-panel select {
+  background-color: var(--card-bg);
+  color: var(--text);
+}
+.journal-page .entry-title::placeholder,
+.journal-page .search-panel input::placeholder,
+.journal-page .tag-input input::placeholder { color: var(--text-muted); opacity: 1; }
+.journal-page .editor-toolbar { background: var(--bg); }
+.journal-page .editor-toolbar button {
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+.journal-page .editor-toolbar button.active { background: var(--primary); color: #fff; }
+.journal-page .react-calendar {
+  width: 100%;
+  border-color: var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+.journal-page .react-calendar button {
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+}
+.journal-page .react-calendar__navigation button {
+  min-width: 36px;
+  min-height: 40px;
+  padding: 5px 8px;
+  border: 0;
+  background: color-mix(in srgb, var(--primary) 13%, var(--card-bg));
+  color: var(--text);
+  font-weight: 600;
+}
+.journal-page .react-calendar__navigation button:enabled:hover,
+.journal-page .react-calendar__tile:enabled:hover,
+.journal-page .react-calendar__tile:enabled:focus {
+  background: color-mix(in srgb, var(--primary) 16%, var(--card-bg));
+}
+.journal-page .react-calendar__month-view__weekdays {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.journal-page .react-calendar__month-view__weekdays abbr {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.journal-page .react-calendar__month-view__days__day--neighboringMonth { color: var(--text-muted); opacity: .62; }
+.journal-page .react-calendar button.react-calendar__tile--now { background: color-mix(in srgb, var(--primary) 10%, var(--card-bg)); }
+.journal-page .react-calendar button.react-calendar__tile--active,
+.journal-page .react-calendar button.react-calendar__tile--active:enabled:hover,
+.journal-page .react-calendar button.react-calendar__tile--active:enabled:focus {
+  background: var(--primary);
+  color: #fff;
+}
+.journal-page .react-calendar__tile--active abbr,
+.journal-page .react-calendar__tile--active.react-calendar__tile--has-entry abbr { color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.journal-page .react-calendar__tile--has-entry abbr::after { color: color-mix(in srgb, var(--primary) 58%, transparent); text-shadow: 0 1px 0 var(--card-bg), 1px 0 0 var(--card-bg); }
+.journal-page .react-calendar__tile--active.react-calendar__tile--has-entry abbr::after { color: rgba(255, 255, 255, .8); text-shadow: 0 1px 0 var(--primary), 1px 0 0 var(--primary); }
+
+[data-theme='dark'] .journal-page .react-calendar__navigation button { background: #282d43; color: #dfe2ff; }
+[data-theme='dark'] .journal-page .react-calendar__navigation button:enabled:hover { background: #343a57; }
+[data-theme='dark'] .journal-page .react-calendar__tile { background: transparent; color: #e7e9f5; }
+[data-theme='dark'] .journal-page .react-calendar__tile:enabled:hover,
+[data-theme='dark'] .journal-page .react-calendar__tile:enabled:focus { background: #2a2f45; }
+[data-theme='dark'] .journal-page .react-calendar button.react-calendar__tile--now { background: #292d45; }
+[data-theme='dark'] .journal-page .react-calendar__month-view__days__day--neighboringMonth { color: #8a91aa; opacity: .62; }
+[data-theme='dark'] .journal-page .react-calendar__tile--active,
+[data-theme='dark'] .journal-page .react-calendar__tile--active:enabled:hover,
+[data-theme='dark'] .journal-page .react-calendar__tile--active:enabled:focus { background: #555dcc; color: #fff; }
+[data-theme='dark'] .journal-page .react-calendar__month-view__weekdays abbr { color: #aeb4ce; }
+[data-theme='dark'] .journal-page .editor-toolbar { background: #171a27; }
+[data-theme='dark'] .journal-page .editor-toolbar button { background: #252a3b; color: #e7e9f5; }
+[data-theme='dark'] .journal-page .editor-toolbar button.active { background: #555dcc; color: #fff; }
+[data-theme='dark'] .result-snippet mark { background: #51491f; color: #fff0a8; }
 
 .journal-layout {
   display: grid;
@@ -623,6 +733,10 @@ main {
 .queued-photo-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; font-size: 13px; }
 .image-help { margin: 10px 2px 0; color: var(--text-muted); font-size: 12px; }
 .image-error { color: #d63031; font-size: 13px; }
+.autosave-status { margin: 11px 0 0; color: var(--text-muted); font-size: 12px; }
+.autosave-status.saved { color: #15803d; }
+.autosave-status.error { color: #dc2626; }
+.autosave-status.saving { color: var(--primary); }
 .image-gallery-item { box-shadow: 0 3px 12px rgba(0,0,0,.05); }
 
 @media (max-width: 560px) {
@@ -893,4 +1007,9 @@ textarea:focus-visible {
     width: 40px;
     height: 40px;
   }
+}
+
+@media (max-width: 600px) {
+  .journal-page .mood-option { width: 40px; height: 40px; }
+  .journal-page .editor-toolbar button { min-width: 44px; min-height: 40px; }
 }
