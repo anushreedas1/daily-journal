@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import InstallAppButton from '../components/InstallAppButton';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -44,6 +45,7 @@ export default function LoginPage() {
       <p>
         No account? <Link to="/register">Register</Link>
       </p>
+      <InstallAppButton />
     </div>
   );
 }

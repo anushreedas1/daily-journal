@@ -858,6 +858,46 @@ textarea:focus-visible {
   min-height: 44px;
 }
 
+.install-app-prompt {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.install-app-prompt > div { display: grid; gap: 4px; }
+.install-app-prompt strong { font-size: 14px; }
+.install-app-prompt span { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.auth-page .install-app-prompt button { width: 100%; background: color-mix(in srgb, var(--primary) 10%, var(--card-bg)); color: var(--primary); font-weight: 650; }
+.auth-page .install-app-prompt button:hover { background: color-mix(in srgb, var(--primary) 17%, var(--card-bg)); }
+
+.install-help-backdrop {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 18, 30, .55);
+}
+
+.install-help {
+  position: relative;
+  width: min(100%, 420px);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: 0 20px 60px rgba(15, 18, 30, .25);
+}
+
+.install-help h2 { margin: 0 30px 18px 0; font-size: 20px; }
+.install-help p { color: var(--text-muted); font-size: 14px; line-height: 1.55; }
+.install-help p strong { color: var(--text); }
+.install-help-close { position: absolute; top: 12px; right: 12px; width: 36px; padding: 0 !important; background: transparent !important; color: var(--text) !important; font-size: 24px !important; }
+.install-help > button:last-child { width: 100%; margin-top: 8px; }
+
 @media (max-width: 800px) {
   .journal-layout {
     grid-template-columns: minmax(0, 1fr);
