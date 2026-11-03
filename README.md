@@ -78,7 +78,15 @@ Journal entries can be exported as PDF documents.
 
 ### 📱 Progressive Web App
 
-The frontend is configured as a PWA and can be installed as an application on supported devices.
+Daily Journal is an installable Progressive Web App (PWA), so it can be added to a phone's home screen and opened in a standalone app window. The mobile layout includes bottom navigation for the journal, insights, and photo memories. The login page has an **Install mobile app** action that opens the browser's install prompt when available or shows device-specific installation steps.
+
+To install the deployed app, open its HTTPS URL in a mobile browser:
+
+- **Samsung Internet:** Open the menu, choose **+ Add page to**, then **Home screen**.
+- **Chrome on Android:** Open the menu and choose **Install app** or **Add to home screen**.
+- **Safari on iPhone:** Tap **Share**, choose **Add to Home Screen**, then tap **Add**. If the option is missing, find it under **Edit Actions** in the Share sheet.
+
+The PWA uses the Vite PWA plugin to generate the web app manifest and service worker during production builds. It is a web app installation; it is not a native Play Store or App Store app.
 
 ---
 
@@ -512,6 +520,8 @@ must never be committed to GitHub.
 - [x] Image captions
 - [x] Cloudinary image storage
 - [x] PWA support
+- [x] Mobile bottom navigation
+- [x] Login page install action with browser-specific instructions
 - [x] Production deployment
 - [x] MongoDB Atlas integration
 
