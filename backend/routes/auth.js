@@ -39,6 +39,7 @@ router.post(
 
       res.status(201).json({ token, user });
     } catch (err) {
+      console.error('[auth/register] Failed:', err.name, err.code, err.message);
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   }
