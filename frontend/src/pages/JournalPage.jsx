@@ -578,7 +578,7 @@ export default function JournalPage() {
             {theme === 'light' ? '🌙' : '☀️'}
           </button>
 
-          <span>Hi, {user?.name}</span>
+          <span>Hi, {user?.username ? `@${user.username}` : user?.name}</span>
 
           <button onClick={logout}>Log out</button>
         </div>

@@ -17,7 +17,12 @@ router.post(
   '/register',
   [
     body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
+    body('username')
+      .trim()
+      .isLength({ min: 3, max: 24 }).withMessage('Username must be 3 to 24 characters')
+      .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only use letters, numbers, and underscores')
+      .toLowerCase(),
+    body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
   ],
   async (req, res) => {
@@ -27,19 +32,25 @@ router.post(
     }
 
     try {
-      const { name, email, password } = req.body;
+      const { name, username, email, password } = req.body;
 
-      const existing = await User.findOne({ email });
+      const existing = await User.findOne({ $or: [{ email }, { username }] });
       if (existing) {
-        return res.status(409).json({ message: 'Email already in use' });
+        const message = existing.email === email ? 'Email already in use' : 'Username already in use';
+        return res.status(409).json({ message });
       }
 
-      const user = await User.create({ name, email, password });
+      const user = await User.create({ name, username, email, password });
       const token = signToken(user._id);
 
       res.status(201).json({ token, user });
     } catch (err) {
       console.error('[auth/register] Failed:', err.name, err.code, err.message);
+      if (err.code === 11000) {
+        const duplicateField = Object.keys(err.keyPattern || {})[0];
+        const message = duplicateField === 'username' ? 'Username already in use' : 'Email already in use';
+        return res.status(409).json({ message });
+      }
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   }
@@ -49,7 +60,9 @@ router.post(
 router.post(
   '/login',
   [
-    body('email').isEmail().withMessage('Valid email is required'),
+    body('identifier')
+      .custom((value, { req }) => Boolean(value || req.body.email))
+      .withMessage('Email or username is required'),
     body('password').notEmpty().withMessage('Password is required')
   ],
   async (req, res) => {
@@ -59,9 +72,10 @@ router.post(
     }
 
     try {
-      const { email, password } = req.body;
+      const identifier = String(req.body.identifier || req.body.email).trim().toLowerCase();
+      const { password } = req.body;
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
       if (!user) {
         return res.status(401).json({ message: 'Invalid email or password' });
       }

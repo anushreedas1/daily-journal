@@ -61,7 +61,8 @@ The application provides basic analytics including:
 ### 🔐 Authentication
 
 - User registration
-- User login
+- Unique usernames (3–24 letters, numbers, or underscores)
+- User login with email or username
 - JWT-based authentication
 - Protected journal routes
 - Persistent authentication using browser storage
@@ -503,6 +504,8 @@ must never be committed to GitHub.
 ## ✅ Current Features
 
 - [x] User registration
+- [x] Unique usernames
+- [x] Login with email or username
 - [x] User login
 - [x] JWT authentication
 - [x] Rich-text journal editor
