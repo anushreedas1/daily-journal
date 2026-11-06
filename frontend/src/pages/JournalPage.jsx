@@ -12,6 +12,19 @@ import SearchPanel from '../components/SearchPanel';
 import { exportEntriesToPdf } from '../components/ExportPdfButton';
 import OnThisDay from '../components/OnThisDay';
 import GoalsPanel from '../components/GoalsPanel';
+import {
+  cacheServerEntry,
+  getCachedEntry,
+  getMonthEntries,
+  getMonthSummary,
+  getPendingDrafts,
+  keepLocalDraft,
+  markDraftConflict,
+  markDraftSynced,
+  saveLocalDraft,
+  saveMonthSummary,
+  useRemoteEntry
+} from '../offlineJournal';
 
 function todayKey() {
   const d = new Date();
@@ -91,6 +104,9 @@ export default function JournalPage() {
   const autosaveTimerRef = useRef(null);
   const [imageStatus, setImageStatus] = useState('idle');
   const [imageError, setImageError] = useState('');
+  const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
+  const [syncConflict, setSyncConflict] = useState(null);
+  const syncLockRef = useRef(false);
 
   // Caption saving state
   const [captionStatus, setCaptionStatus] = useState(null);
@@ -100,29 +116,153 @@ export default function JournalPage() {
   // --------------------------------------------------
 
   const loadSummary = useCallback(async (y, m) => {
+    const showCachedSummary = async () => {
+      if (!user?._id) return;
+      try {
+        const map = { ...(await getMonthSummary(user._id, y, m)) };
+        const localEntries = await getMonthEntries(user._id, y, m);
+        Object.entries(localEntries).forEach(([date, record]) => {
+          if (record.pending || !map[date]) {
+            map[date] = {
+              title: record.data.title,
+              mood: record.data.mood,
+              images: record.images || []
+            };
+          }
+        });
+        setEntriesByDate(map);
+      } catch (err) {
+        console.error('Could not load offline journal summary:', err);
+      }
+    };
+
+    if (!navigator.onLine) {
+      await showCachedSummary();
+      return;
+    }
+
     try {
       const res = await api.get('/entries/summary', {
-        params: {
-          year: y,
-          month: m
-        }
+        params: { year: y, month: m },
+        timeout: 12000
       });
-
       const map = {};
-
-      res.data.entries.forEach((e) => {
-        map[e.date] = {
-          mood: e.mood,
-          title: e.title,
-          images: e.images || []
+      res.data.entries.forEach((entry) => {
+        map[entry.date] = {
+          mood: entry.mood,
+          title: entry.title,
+          images: entry.images || []
         };
       });
-
+      setIsOffline(false);
+      if (user?._id) await saveMonthSummary(user._id, y, m, map);
+      const localEntries = user?._id ? await getMonthEntries(user._id, y, m) : {};
+      Object.entries(localEntries).forEach(([date, record]) => {
+        if (record.pending) {
+          map[date] = { title: record.data.title, mood: record.data.mood, images: record.images || [] };
+        }
+      });
       setEntriesByDate(map);
     } catch (err) {
+      if (!err.response || err.code === 'ECONNABORTED') setIsOffline(true);
       console.error('Could not load journal summary:', err);
+      await showCachedSummary();
     }
-  }, []);
+  }, [user]);
+
+  const syncPendingDrafts = useCallback(async () => {
+    if (!user?._id || !navigator.onLine || syncLockRef.current) return;
+    syncLockRef.current = true;
+    let changed = false;
+
+    try {
+      const pending = await getPendingDrafts(user._id);
+      for (const record of pending) {
+        if (!navigator.onLine) break;
+
+        let remoteEntry = null;
+        try {
+          const remoteResponse = await api.get(`/entries/${record.date}`, { timeout: 12000 });
+          remoteEntry = remoteResponse.data.entry;
+        } catch (err) {
+          if (err.response?.status !== 404) {
+            if (!err.response || err.code === 'ECONNABORTED') setIsOffline(true);
+            break;
+          }
+        }
+
+        const remoteUpdatedAt = remoteEntry?.updatedAt || null;
+        const remoteMatchesDraft = remoteEntry && JSON.stringify({
+          title: remoteEntry.title || '',
+          body: remoteEntry.body || '',
+          mood: remoteEntry.mood || null,
+          tags: remoteEntry.tags || []
+        }) === JSON.stringify(record.data);
+
+        if (remoteUpdatedAt !== (record.baseUpdatedAt || null) && !remoteMatchesDraft) {
+          await markDraftConflict(user._id, record.date, remoteEntry);
+          if (selectedDate === record.date) {
+            setSyncConflict({ date: record.date, remote: remoteEntry || { date: record.date, missing: true } });
+            setDraftStatus('conflict');
+          }
+          continue;
+        }
+
+        if (remoteMatchesDraft) {
+          await markDraftSynced(user._id, record.date, record.data, remoteEntry);
+          changed = true;
+          if (selectedDate === record.date) {
+            lastSavedDraftRef.current = JSON.stringify(record.data);
+            hasEntryRef.current = true;
+            setDraftStatus('saved');
+          }
+          continue;
+        }
+
+        try {
+          const response = await api.put(`/entries/${record.date}`, record.data, { timeout: 12000 });
+          await markDraftSynced(user._id, record.date, record.data, response.data.entry);
+          changed = true;
+          if (selectedDate === record.date) {
+            lastSavedDraftRef.current = JSON.stringify(record.data);
+            hasEntryRef.current = true;
+            setDraftStatus('saved');
+          }
+          setIsOffline(false);
+          window.dispatchEvent(new Event('journal-entry-changed'));
+        } catch (err) {
+          if (!err.response || err.code === 'ECONNABORTED') setIsOffline(true);
+          break;
+        }
+      }
+
+      if (changed) await loadSummary(year, month);
+    } catch (err) {
+      console.error('Could not sync offline journal drafts:', err);
+    } finally {
+      syncLockRef.current = false;
+    }
+  }, [user, selectedDate, loadSummary, year, month]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      syncPendingDrafts();
+      loadSummary(year, month);
+    };
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    syncPendingDrafts();
+    const retryTimer = window.setInterval(() => {
+      if (navigator.onLine) syncPendingDrafts();
+    }, 20000);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.clearInterval(retryTimer);
+    };
+  }, [syncPendingDrafts, loadSummary, year, month]);
 
   useEffect(() => {
     loadSummary(year, month);
@@ -135,65 +275,101 @@ export default function JournalPage() {
   useEffect(() => {
     let cancelled = false;
 
-    setLoadedDate(null);
-    setDraftStatus('idle');
-    setStatus('loading');
-    setImageFiles([]);
-    setImageError('');
-    setImageStatus('idle');
-    setCaptionStatus(null);
+    async function loadEntry() {
+      setLoadedDate(null);
+      setDraftStatus('idle');
+      setSyncConflict(null);
+      setStatus('loading');
+      setImageFiles([]);
+      setImageError('');
+      setImageStatus('idle');
+      setCaptionStatus(null);
 
-    api
-      .get(`/entries/${selectedDate}`)
-      .then((res) => {
-        if (cancelled) return;
-
-        const entry = res.data.entry;
-
-        setTitle(entry.title || '');
-        setBody(entry.body || '');
-        setMood(entry.mood || null);
-        setTags(entry.tags || []);
-        setImages(entry.images || []);
-        hasEntryRef.current = true;
-        lastSavedDraftRef.current = JSON.stringify({
-          title: entry.title || '',
-          body: entry.body || '',
-          mood: entry.mood || null,
-          tags: entry.tags || []
-        });
-        setLoadedDate(selectedDate);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-
-        if (err.response?.status === 404) {
-          setTitle('');
-          setBody('');
-          setMood(null);
-          setTags([]);
-          setImages([]);
-          setImageFiles([]);
-          hasEntryRef.current = false;
-          lastSavedDraftRef.current = JSON.stringify({ title: '', body: '', mood: null, tags: [] });
-          setLoadedDate(selectedDate);
-        } else {
-          console.error(
-            'Could not load journal entry:',
-            err
-          );
+      let cached = null;
+      if (user?._id) {
+        try {
+          cached = await getCachedEntry(user._id, selectedDate);
+        } catch (err) {
+          console.error('Could not read cached journal entry:', err);
         }
-      })
-      .finally(() => {
+      }
+
+      const applyEntry = (entry, record = null) => {
+        const data = record?.data || entry;
+        setTitle(data.title || '');
+        setBody(data.body || '');
+        setMood(data.mood || null);
+        setTags(data.tags || []);
+        setImages(record?.images || entry.images || []);
+        hasEntryRef.current = Boolean(entry || record?.pending || record?.conflictRemote);
+        lastSavedDraftRef.current = JSON.stringify({
+          title: data.title || '',
+          body: data.body || '',
+          mood: data.mood || null,
+          tags: data.tags || []
+        });
+        if (record?.conflictRemote) {
+          setSyncConflict({ date: selectedDate, remote: record.conflictRemote });
+          setDraftStatus('conflict');
+        } else if (record?.pending) {
+          setDraftStatus(navigator.onLine ? 'queued' : 'offline');
+        }
+      };
+
+      const clearEntry = () => {
+        setTitle('');
+        setBody('');
+        setMood(null);
+        setTags([]);
+        setImages([]);
+        hasEntryRef.current = false;
+        lastSavedDraftRef.current = JSON.stringify({ title: '', body: '', mood: null, tags: [] });
+      };
+
+      if (cached?.pending || cached?.conflictRemote) {
+        applyEntry(null, cached);
+        setLoadedDate(selectedDate);
+        setStatus('idle');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        setIsOffline(true);
+        if (cached) applyEntry(null, cached);
+        else clearEntry();
+        setLoadedDate(selectedDate);
+        setStatus('idle');
+        return;
+      }
+
+      try {
+        const response = await api.get(`/entries/${selectedDate}`, { timeout: 12000 });
+        if (cancelled) return;
+        const entry = response.data.entry;
+        if (user?._id) await cacheServerEntry(user._id, entry);
+        if (cancelled) return;
+        applyEntry(entry);
+        setIsOffline(false);
+      } catch (err) {
+        if (cancelled) return;
+        if (!err.response || err.code === 'ECONNABORTED') setIsOffline(true);
+        if (cached) applyEntry(null, cached);
+        else clearEntry();
+        if (err.response?.status !== 404) console.error('Could not load journal entry:', err);
+      } finally {
         if (!cancelled) {
+          setLoadedDate(selectedDate);
           setStatus('idle');
         }
-      });
+      }
+    }
+
+    loadEntry();
 
     return () => {
       cancelled = true;
     };
-  }, [selectedDate]);
+  }, [selectedDate, user]);
 
   // Automatically save changed text and metadata after the user pauses typing.
   useEffect(() => {
@@ -207,43 +383,77 @@ export default function JournalPage() {
 
     setDraftStatus('pending');
     autosaveTimerRef.current = window.setTimeout(async () => {
-      setDraftStatus('saving');
+      const data = JSON.parse(draft);
+      let storedLocally = false;
       try {
-        await api.put(`/entries/${selectedDate}`, JSON.parse(draft));
-        lastSavedDraftRef.current = draft;
+        await saveLocalDraft(user._id, selectedDate, data);
+        storedLocally = true;
         hasEntryRef.current = true;
+
+        if (syncConflict?.date === selectedDate) {
+          setDraftStatus('conflict');
+          return;
+        }
+
+        if (!navigator.onLine) {
+          setIsOffline(true);
+          setDraftStatus('offline');
+          return;
+        }
+
+        setDraftStatus('saving');
+        const response = await api.put(`/entries/${selectedDate}`, data, { timeout: 12000 });
+        await markDraftSynced(user._id, selectedDate, data, response.data.entry);
+        lastSavedDraftRef.current = draft;
         setDraftStatus('saved');
+        setIsOffline(false);
         window.dispatchEvent(new Event('journal-entry-changed'));
         await loadSummary(year, month);
       } catch (err) {
         console.error('Could not autosave journal draft:', err);
-        setDraftStatus('error');
+        if (!err.response || err.code === 'ECONNABORTED') setIsOffline(true);
+        setDraftStatus(storedLocally && err.response?.status !== 401 && err.response?.status !== 400 ? 'queued' : 'error');
       }
     }, 900);
 
     return () => window.clearTimeout(autosaveTimerRef.current);
-  }, [selectedDate, loadedDate, title, body, mood, tags, year, month, loadSummary]);
+  }, [selectedDate, loadedDate, title, body, mood, tags, year, month, loadSummary, user, syncConflict]);
 
   // --------------------------------------------------
   // Save journal entry
   // --------------------------------------------------
 
   async function handleSave() {
+    const data = { title, body, mood, tags };
+    let storedLocally = false;
     try {
       window.clearTimeout(autosaveTimerRef.current);
       setStatus('saving');
+      await saveLocalDraft(user._id, selectedDate, data);
+      storedLocally = true;
+      hasEntryRef.current = true;
 
-      await api.put(`/entries/${selectedDate}`, {
-        title,
-        body,
-        mood,
-        tags
-      });
+      if (syncConflict?.date === selectedDate) {
+        setDraftStatus('conflict');
+        setStatus('idle');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        setIsOffline(true);
+        setDraftStatus('offline');
+        setStatus('saved-offline');
+        window.setTimeout(() => setStatus('idle'), 1800);
+        return;
+      }
+
+      const response = await api.put(`/entries/${selectedDate}`, data, { timeout: 12000 });
+      await markDraftSynced(user._id, selectedDate, data, response.data.entry);
 
       window.dispatchEvent(new Event('journal-entry-changed'));
-      lastSavedDraftRef.current = JSON.stringify({ title, body, mood, tags });
-      hasEntryRef.current = true;
+      lastSavedDraftRef.current = JSON.stringify(data);
       setDraftStatus('saved');
+      setIsOffline(false);
 
       setStatus('saved');
 
@@ -255,14 +465,53 @@ export default function JournalPage() {
     } catch (err) {
       console.error('Could not save entry:', err);
 
-      setDraftStatus('error');
-      setStatus('idle');
+      if (!err.response || err.code === 'ECONNABORTED') setIsOffline(true);
+      setDraftStatus(storedLocally && err.response?.status !== 401 && err.response?.status !== 400 ? 'queued' : 'error');
+      setStatus(storedLocally ? 'saved-offline' : 'idle');
 
-      alert(
-        err.response?.data?.message ||
-          'Could not save journal entry'
-      );
+      if (storedLocally) {
+        window.setTimeout(() => setStatus('idle'), 1800);
+      } else {
+        alert(err.response?.data?.message || 'Could not save journal entry');
+      }
     }
+  }
+
+  async function handleKeepOfflineVersion() {
+    await keepLocalDraft(user._id, selectedDate);
+    setSyncConflict(null);
+    setDraftStatus('queued');
+    syncPendingDrafts();
+  }
+
+  async function handleUseOnlineVersion() {
+    const remote = syncConflict?.remote;
+    await useRemoteEntry(user._id, selectedDate);
+    setSyncConflict(null);
+    if (remote?.missing) {
+      setTitle('');
+      setBody('');
+      setMood(null);
+      setTags([]);
+      setImages([]);
+      hasEntryRef.current = false;
+      lastSavedDraftRef.current = JSON.stringify({ title: '', body: '', mood: null, tags: [] });
+    } else if (remote) {
+      setTitle(remote.title || '');
+      setBody(remote.body || '');
+      setMood(remote.mood || null);
+      setTags(remote.tags || []);
+      setImages(remote.images || []);
+      hasEntryRef.current = true;
+      lastSavedDraftRef.current = JSON.stringify({
+        title: remote.title || '',
+        body: remote.body || '',
+        mood: remote.mood || null,
+        tags: remote.tags || []
+      });
+    }
+    setDraftStatus('idle');
+    await loadSummary(year, month);
   }
 
   // --------------------------------------------------
@@ -584,6 +833,12 @@ export default function JournalPage() {
         </div>
       </header>
 
+      {isOffline && (
+        <div className="offline-banner" role="status">
+          You’re offline. Journal text, mood, and tags save on this device and sync when you reconnect. Photo uploads need an internet connection.
+        </div>
+      )}
+
       {!journalPanel ? <div className="journal-layout">
         <aside>
           <CalendarView
@@ -615,6 +870,19 @@ export default function JournalPage() {
 
         <main>
           <h2>{selectedDate}</h2>
+
+          {syncConflict?.date === selectedDate && (
+            <div className="offline-conflict" role="alert">
+              <p>This entry changed online while you were offline. Choose which version to keep.</p>
+              <div>
+                <button type="button" onClick={handleKeepOfflineVersion}>
+                  {syncConflict.remote?.missing ? 'Restore my offline version' : 'Keep my offline version'}
+                </button>
+                {!syncConflict.remote?.missing && <button type="button" className="secondary-action" onClick={handleUseOnlineVersion}>Use online version</button>}
+              </div>
+              {syncConflict.remote?.missing && <small>The online entry was deleted. Keeping your version will restore it.</small>}
+            </div>
+          )}
 
           <input
             type="text"
@@ -892,7 +1160,7 @@ export default function JournalPage() {
 
           {draftStatus !== 'idle' && (
             <p className={`autosave-status ${draftStatus}`} role="status" aria-live="polite">
-              {draftStatus === 'pending' ? 'Draft will save shortly…' : draftStatus === 'saving' ? 'Saving draft…' : draftStatus === 'saved' ? 'Draft saved automatically' : 'Draft could not be saved. Try Save entry.'}
+              {draftStatus === 'pending' ? 'Draft will save shortly…' : draftStatus === 'saving' ? 'Saving draft…' : draftStatus === 'saved' ? 'Draft saved to your account' : draftStatus === 'offline' ? 'Saved on this device. It will sync when you reconnect.' : draftStatus === 'queued' ? 'Saved on this device. Waiting to sync…' : draftStatus === 'conflict' ? 'Choose which version of this entry to keep.' : 'Draft could not be saved. Try again when connected.'}
             </p>
           )}
 
@@ -903,6 +1171,8 @@ export default function JournalPage() {
             >
               {status === 'saving'
                 ? 'Saving…'
+                : status === 'saved-offline'
+                ? 'Saved offline ✓'
                 : status === 'saved'
                 ? 'Saved ✓'
                 : 'Save entry'}

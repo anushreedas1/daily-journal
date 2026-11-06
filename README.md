@@ -89,6 +89,8 @@ To install the deployed app, open its HTTPS URL in a mobile browser:
 
 The PWA uses the Vite PWA plugin to generate the web app manifest and service worker during production builds. It is a web app installation; it is not a native Play Store or App Store app.
 
+After signing in and opening the app online at least once, users can write or edit journal text, mood, and tags offline. Drafts are stored on that device and sync when the connection returns. Previously saved entries are available offline after they have been opened online; the calendar summary is cached by month. If an entry changed on the server while the device was offline, the app asks which version to keep. Photo uploads, search, insights, and other server-backed features still need a connection.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -525,6 +527,7 @@ must never be committed to GitHub.
 - [x] PWA support
 - [x] Mobile bottom navigation
 - [x] Login page install action with browser-specific instructions
+- [x] Offline journal drafts with reconnect sync
 - [x] Production deployment
 - [x] MongoDB Atlas integration
 

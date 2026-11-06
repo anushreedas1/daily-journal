@@ -426,6 +426,9 @@ body {
   .reminder-card { grid-column: 1 / -1; }
 }
 @media (max-width: 600px) {
+  .offline-banner { margin: 10px 14px 0; }
+  .offline-conflict > div { flex-direction: column; }
+  .offline-conflict button { width: 100%; }
   .mobile-navigation {
     position: fixed;
     z-index: 100;
@@ -773,6 +776,14 @@ main {
 .autosave-status.saved { color: #15803d; }
 .autosave-status.error { color: #dc2626; }
 .autosave-status.saving { color: var(--primary); }
+.autosave-status.offline, .autosave-status.queued { color: #a16207; }
+.autosave-status.conflict { color: #b45309; font-weight: 650; }
+.offline-banner { margin: 12px 20px 0; padding: 11px 14px; border: 1px solid #f0d28a; border-radius: 10px; background: color-mix(in srgb, #fef3c7 68%, var(--card-bg)); color: #795313; font-size: 13px; line-height: 1.5; }
+.offline-conflict { margin: 12px 0 16px; padding: 14px; border: 1px solid #eab16a; border-radius: 12px; background: color-mix(in srgb, #fff7ed 72%, var(--card-bg)); color: var(--text); }
+.offline-conflict p { margin: 0 0 12px; font-size: 13px; line-height: 1.5; }
+.offline-conflict > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.offline-conflict .secondary-action { border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
+.offline-conflict small { display: block; margin-top: 10px; color: var(--text-muted); }
 .image-gallery-item { box-shadow: 0 3px 12px rgba(0,0,0,.05); }
 
 @media (max-width: 560px) {
